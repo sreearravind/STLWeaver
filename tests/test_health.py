@@ -51,3 +51,66 @@ def test_generate_endpoint_returns_structured_placeholder_response() -> None:
     assert payload["security_passed"] is True
     assert payload["supports_analyzed"] is True
     assert payload["support_recommendation"] == "none"
+
+
+def test_status_endpoint_returns_placeholder_job_state() -> None:
+    """The status endpoint should return the stored placeholder job state."""
+    create_response = client.post(
+        "/generate",
+        json={
+            "prompt": "Create a simple bracket",
+            "llm_provider": "openai",
+            "analyze_supports": False,
+        },
+    )
+    job_id = create_response.json()["job_id"]
+
+    response = client.get(f"/status/{job_id}")
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["job_id"] == job_id
+    assert payload["status"] == "pending"
+    assert payload["llm_provider"] == "openai"
+    assert payload["supports_analyzed"] is False
+
+
+def test_status_endpoint_returns_404_for_unknown_job() -> None:
+    """The status endpoint should reject unknown job identifiers cleanly."""
+    response = client.get("/status/does-not-exist")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Unknown job_id: does-not-exist"
+
+
+def test_generate_endpoint_rejects_unsupported_provider() -> None:
+    """The generate endpoint should reject unsupported providers."""
+    response = client.post(
+        "/generate",
+        json={
+            "prompt": "Create a simple bracket",
+            "llm_provider": "not-a-provider",
+            "analyze_supports": True,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Unsupported provider: not-a-provider"
+
+
+def test_generate_endpoint_rejects_empty_prompt() -> None:
+    """The generate endpoint should reject whitespace-only prompts."""
+    response = client.post(
+        "/generate",
+        json={
+            "prompt": "   ",
+            "llm_provider": "openai",
+            "analyze_supports": True,
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+
+    assert any("Prompt must not be empty." in entry["msg"] for entry in detail)

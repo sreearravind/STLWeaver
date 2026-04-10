@@ -21,6 +21,12 @@ class LLMManager:
             for name, models in self.SUPPORTED_PROVIDERS.items()
         ]
 
+    def is_supported_provider(self, provider: str | None) -> bool:
+        """Check whether a provider is supported by the placeholder service."""
+        if provider is None:
+            return True
+        return provider in self.SUPPORTED_PROVIDERS
+
     async def generate_code(
         self,
         prompt: str,

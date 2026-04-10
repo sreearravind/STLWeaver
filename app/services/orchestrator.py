@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from app.models.schemas import GenerateRequest, GenerateResponse, ProviderInfo
+from app.models.schemas import GenerateRequest, GenerateResponse, JobStatusResponse, ProviderInfo
 from app.services.geometry_engine import GeometryProcessor, SupportStructureAnalyzer
 from app.services.llm_manager import LLMManager
 from app.services.security import SecurityValidator
@@ -22,6 +22,7 @@ class GenerationOrchestrator:
         self.security_validator = security_validator or SecurityValidator()
         self.geometry_processor = geometry_processor or GeometryProcessor()
         self.support_analyzer = support_analyzer or SupportStructureAnalyzer(self.geometry_processor)
+        self.jobs: dict[str, JobStatusResponse] = {}
 
     def get_supported_providers(self) -> list[ProviderInfo]:
         """Expose provider metadata for the API layer."""
@@ -37,6 +38,9 @@ class GenerationOrchestrator:
 
     async def submit_generation(self, request: GenerateRequest) -> GenerateResponse:
         """Run a shallow placeholder orchestration flow."""
+        if not self.llm_manager.is_supported_provider(request.llm_provider):
+            raise ValueError(f"Unsupported provider: {request.llm_provider}")
+
         llm_result = await self.llm_manager.generate_code(
             prompt=request.prompt,
             provider=request.llm_provider,
@@ -50,8 +54,9 @@ class GenerationOrchestrator:
             support_result = self.support_analyzer.analyze(geometry)
             support_recommendation = support_result.recommended_type
 
-        return GenerateResponse(
-            job_id=str(uuid4()),
+        job_id = str(uuid4())
+        response = GenerateResponse(
+            job_id=job_id,
             status="accepted",
             message="Generation request accepted. The current pipeline is a connected placeholder scaffold.",
             llm_provider=llm_result["provider"],
@@ -62,4 +67,17 @@ class GenerationOrchestrator:
             support_recommendation=support_recommendation,
             estimated_time=0,
         )
+        self.jobs[job_id] = JobStatusResponse(
+            job_id=job_id,
+            status="pending",
+            message="Placeholder job recorded in memory. Background processing is not implemented yet.",
+            llm_provider=response.llm_provider,
+            llm_model=response.llm_model,
+            supports_analyzed=response.supports_analyzed,
+            support_recommendation=response.support_recommendation,
+        )
+        return response
 
+    def get_job_status(self, job_id: str) -> JobStatusResponse | None:
+        """Return placeholder job status for a previously submitted request."""
+        return self.jobs.get(job_id)
