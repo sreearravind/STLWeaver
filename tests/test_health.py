@@ -46,7 +46,10 @@ def test_generate_endpoint_returns_structured_placeholder_response() -> None:
     payload = response.json()
 
     assert payload["status"] == "accepted"
+    assert payload["stage"] == "queued"
     assert payload["llm_provider"] == "openai"
+    assert payload["created_at"]
+    assert payload["prompt_summary"]["text"] == "Create a simple bracket"
     assert payload["code_generated"] is True
     assert payload["security_passed"] is True
     assert payload["supports_analyzed"] is True
@@ -72,7 +75,10 @@ def test_status_endpoint_returns_placeholder_job_state() -> None:
 
     assert payload["job_id"] == job_id
     assert payload["status"] == "pending"
+    assert payload["stage"] == "validated"
     assert payload["llm_provider"] == "openai"
+    assert payload["created_at"]
+    assert payload["prompt_summary"]["text"] == "Create a simple bracket"
     assert payload["supports_analyzed"] is False
 
 
@@ -114,3 +120,27 @@ def test_generate_endpoint_rejects_empty_prompt() -> None:
     detail = response.json()["detail"]
 
     assert any("Prompt must not be empty." in entry["msg"] for entry in detail)
+
+
+def test_preview_endpoint_returns_structured_placeholder_preview() -> None:
+    """The preview endpoint should expose simulated preview metadata."""
+    response = client.post(
+        "/preview",
+        json={
+            "prompt": "Create a compact phone stand with a cable slot",
+            "llm_provider": "openai",
+            "analyze_supports": True,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["status"] == "ok"
+    assert payload["stage"] == "preview_ready"
+    assert payload["llm_provider"] == "openai"
+    assert payload["prompt_summary"]["length"] > 0
+    assert payload["code_preview"]["generated"] is True
+    assert payload["geometry_preview"]["available"] is False
+    assert payload["support_preview"]["analyzed"] is True
+    assert payload["support_preview"]["recommended_type"] == "none"

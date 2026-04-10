@@ -9,6 +9,7 @@ from app.models.schemas import (
     GenerateResponse,
     HealthResponse,
     JobStatusResponse,
+    PreviewResponse,
     ProvidersResponse,
 )
 from app.services.orchestrator import GenerationOrchestrator
@@ -47,6 +48,20 @@ async def get_status(job_id: str) -> JobStatusResponse:
     if job_status is None:
         raise HTTPException(status_code=404, detail=f"Unknown job_id: {job_id}")
     return job_status
+
+
+@api_router.post(
+    "/preview",
+    response_model=PreviewResponse,
+    responses={400: {"model": ErrorResponse}},
+    tags=["generation"],
+)
+async def preview_generation(request: GenerateRequest) -> PreviewResponse:
+    """Return a simulated preview without creating a persisted job."""
+    try:
+        return await orchestrator.preview_generation(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @generation_router.post(

@@ -25,6 +25,37 @@ class ProvidersResponse(BaseModel):
     providers: list[ProviderInfo]
 
 
+class PromptSummary(BaseModel):
+    """Compact prompt metadata for placeholder responses."""
+
+    text: str
+    length: int
+    truncated: bool = False
+
+
+class PlaceholderCodeSummary(BaseModel):
+    """Minimal code-preview metadata."""
+
+    generated: bool = False
+    snippet: str | None = None
+    message: str
+
+
+class PlaceholderGeometrySummary(BaseModel):
+    """Minimal geometry-preview metadata."""
+
+    available: bool = False
+    summary: str
+
+
+class PlaceholderSupportSummary(BaseModel):
+    """Minimal support-analysis metadata."""
+
+    analyzed: bool = False
+    recommended_type: str | None = None
+    summary: str
+
+
 class GenerateRequest(BaseModel):
     """Minimal generation request schema."""
 
@@ -57,9 +88,12 @@ class GenerateResponse(BaseModel):
 
     job_id: str
     status: str
+    stage: str
     message: str
     llm_provider: str
     llm_model: str | None = None
+    prompt_summary: PromptSummary
+    created_at: str
     code_generated: bool = False
     security_passed: bool = False
     supports_analyzed: bool = False
@@ -72,9 +106,12 @@ class JobStatusResponse(BaseModel):
 
     job_id: str
     status: str
+    stage: str
     message: str
     llm_provider: str
     llm_model: str | None = None
+    prompt_summary: PromptSummary
+    created_at: str
     supports_analyzed: bool = False
     support_recommendation: str | None = None
 
@@ -83,3 +120,17 @@ class ErrorResponse(BaseModel):
     """Basic API error payload."""
 
     detail: str
+
+
+class PreviewResponse(BaseModel):
+    """Placeholder preview response schema."""
+
+    status: str
+    stage: str
+    message: str
+    llm_provider: str
+    llm_model: str | None = None
+    prompt_summary: PromptSummary
+    code_preview: PlaceholderCodeSummary
+    geometry_preview: PlaceholderGeometrySummary
+    support_preview: PlaceholderSupportSummary
