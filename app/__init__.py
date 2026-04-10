@@ -1,0 +1,2 @@
+"""STLWeaver application package."""
+
