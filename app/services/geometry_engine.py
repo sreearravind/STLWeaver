@@ -19,10 +19,13 @@ class GeometryProcessor:
     def __init__(self, overhang_threshold: float = 45.0) -> None:
         self.overhang_threshold = overhang_threshold
 
-    def create_model(self, generated_code: str) -> Any:
-        """Return a placeholder geometry result."""
-        del generated_code
-        return None
+    def create_geometry(self, generated_code: str) -> dict[str, Any]:
+        """Return a placeholder geometry payload."""
+        return {
+            "geometry": None,
+            "source_code_present": bool(generated_code.strip()),
+            "message": "Geometry generation is not implemented yet.",
+        }
 
 
 class SupportStructureAnalyzer:
@@ -31,8 +34,11 @@ class SupportStructureAnalyzer:
     def __init__(self, geometry_processor: GeometryProcessor) -> None:
         self.geometry_processor = geometry_processor
 
-    def analyze_support_needs(self, geometry: Any) -> SupportRecommendation:
+    def analyze(self, geometry: Any) -> SupportRecommendation:
         """Return a default recommendation until analysis is implemented."""
         del geometry
-        return SupportRecommendation()
-
+        return SupportRecommendation(
+            needs_supports=False,
+            recommended_type="none",
+            notes=["Support analysis is currently a placeholder."],
+        )

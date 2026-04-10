@@ -7,9 +7,8 @@ class SecurityValidator:
     ALLOWED_IMPORTS: set[str] = {"build123d", "math", "typing"}
     DANGEROUS_MODULES: set[str] = {"os", "sys", "subprocess", "socket"}
 
-    def validate_code(self, code: str) -> tuple[bool, list[str]]:
+    def validate_code(self, code: str) -> dict[str, object]:
         """Perform a shallow placeholder validation step."""
         if not code.strip():
-            return False, ["No code provided."]
-        return True, []
-
+            return {"is_safe": False, "violations": ["No code provided."]}
+        return {"is_safe": True, "violations": []}
