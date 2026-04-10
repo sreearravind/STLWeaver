@@ -8,3 +8,4 @@ htmlcov/
 .venv/
 venv/
 .env
+STL_Weaver_context/
