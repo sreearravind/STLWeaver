@@ -47,6 +47,10 @@ class GenerationOrchestrator:
             for provider in providers
         ]
 
+    def get_supported_provider_names(self) -> list[str]:
+        """Return the supported provider names in a stable order."""
+        return [provider.name for provider in self.get_supported_providers()]
+
     def _summarize_prompt(self, prompt: str, max_length: int = 80) -> PromptSummary:
         """Return a compact prompt summary for API payloads."""
         truncated = len(prompt) > max_length
@@ -62,7 +66,10 @@ class GenerationOrchestrator:
     async def submit_generation(self, request: GenerateRequest) -> GenerateResponse:
         """Run a shallow placeholder orchestration flow."""
         if not self.llm_manager.is_supported_provider(request.llm_provider):
-            raise ValueError(f"Unsupported provider: {request.llm_provider}")
+            supported = ", ".join(self.get_supported_provider_names())
+            raise ValueError(
+                f"Unsupported provider '{request.llm_provider}'. Supported providers: {supported}."
+            )
 
         llm_result = await self.llm_manager.generate_code(
             prompt=request.prompt,
@@ -116,7 +123,10 @@ class GenerationOrchestrator:
     async def preview_generation(self, request: GenerateRequest) -> PreviewResponse:
         """Return a simulated preview response without creating a stored job."""
         if not self.llm_manager.is_supported_provider(request.llm_provider):
-            raise ValueError(f"Unsupported provider: {request.llm_provider}")
+            supported = ", ".join(self.get_supported_provider_names())
+            raise ValueError(
+                f"Unsupported provider '{request.llm_provider}'. Supported providers: {supported}."
+            )
 
         llm_result = await self.llm_manager.generate_code(
             prompt=request.prompt,

@@ -7,8 +7,11 @@ class HealthResponse(BaseModel):
     """Health-check response payload."""
 
     status: str = Field(..., description="Service health status")
+    stage: str = Field(..., description="Current scaffold lifecycle stage")
+    message: str = Field(..., description="Short service note")
     app_name: str = Field(..., description="Application name")
     version: str = Field(..., description="Application version")
+    mode: str = Field(..., description="Current operating mode")
 
 
 class ProviderInfo(BaseModel):
@@ -22,6 +25,9 @@ class ProviderInfo(BaseModel):
 class ProvidersResponse(BaseModel):
     """Response payload for supported LLM providers."""
 
+    status: str
+    stage: str
+    message: str
     providers: list[ProviderInfo]
 
 
@@ -134,3 +140,16 @@ class PreviewResponse(BaseModel):
     code_preview: PlaceholderCodeSummary
     geometry_preview: PlaceholderGeometrySummary
     support_preview: PlaceholderSupportSummary
+
+
+class InfoResponse(BaseModel):
+    """Lightweight application inspection payload."""
+
+    status: str
+    stage: str
+    message: str
+    app_name: str
+    version: str
+    mode: str
+    available_endpoints: list[str]
+    supported_providers: list[str]

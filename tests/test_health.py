@@ -16,6 +16,8 @@ def test_health_endpoint_returns_ok() -> None:
     payload = response.json()
 
     assert payload["status"] == "ok"
+    assert payload["stage"] == "ready"
+    assert payload["mode"] == "placeholder_scaffold"
     assert payload["app_name"] == "STLWeaver"
     assert payload["version"] == "0.1.0"
 
@@ -27,8 +29,24 @@ def test_providers_endpoint_returns_placeholder_provider_data() -> None:
     assert response.status_code == 200
     payload = response.json()
 
+    assert payload["status"] == "ok"
+    assert payload["stage"] == "inspection"
     assert "providers" in payload
     assert any(provider["name"] == "openai" for provider in payload["providers"])
+
+
+def test_info_endpoint_returns_local_inspection_metadata() -> None:
+    """The info endpoint should expose local inspection metadata."""
+    response = client.get("/info")
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["status"] == "ok"
+    assert payload["stage"] == "inspection"
+    assert payload["mode"] == "placeholder_scaffold"
+    assert "/preview" in payload["available_endpoints"]
+    assert "openai" in payload["supported_providers"]
 
 
 def test_generate_endpoint_returns_structured_placeholder_response() -> None:
@@ -87,7 +105,7 @@ def test_status_endpoint_returns_404_for_unknown_job() -> None:
     response = client.get("/status/does-not-exist")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Unknown job_id: does-not-exist"
+    assert response.json()["detail"] == "No placeholder job found for job_id 'does-not-exist'."
 
 
 def test_generate_endpoint_rejects_unsupported_provider() -> None:
@@ -102,7 +120,10 @@ def test_generate_endpoint_rejects_unsupported_provider() -> None:
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Unsupported provider: not-a-provider"
+    detail = response.json()["detail"]
+
+    assert "Unsupported provider 'not-a-provider'." in detail
+    assert "Supported providers:" in detail
 
 
 def test_generate_endpoint_rejects_empty_prompt() -> None:

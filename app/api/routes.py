@@ -8,6 +8,7 @@ from app.models.schemas import (
     GenerateRequest,
     GenerateResponse,
     HealthResponse,
+    InfoResponse,
     JobStatusResponse,
     PreviewResponse,
     ProvidersResponse,
@@ -25,15 +26,38 @@ async def health_check() -> HealthResponse:
     """Return a lightweight health response for service checks."""
     return HealthResponse(
         status="ok",
+        stage="ready",
+        message="STLWeaver placeholder backend is available for local development.",
         app_name=settings.app_name,
         version=settings.app_version,
+        mode="placeholder_scaffold",
     )
 
 
 @api_router.get("/providers", response_model=ProvidersResponse, tags=["providers"])
 async def list_providers() -> ProvidersResponse:
     """Return the configured placeholder provider list."""
-    return ProvidersResponse(providers=orchestrator.get_supported_providers())
+    return ProvidersResponse(
+        status="ok",
+        stage="inspection",
+        message="Provider metadata is placeholder-only; no live provider connectivity is configured.",
+        providers=orchestrator.get_supported_providers(),
+    )
+
+
+@api_router.get("/info", response_model=InfoResponse, tags=["inspection"])
+async def get_info() -> InfoResponse:
+    """Return lightweight metadata for local developer inspection."""
+    return InfoResponse(
+        status="ok",
+        stage="inspection",
+        message="STLWeaver is running as a placeholder scaffold. CAD, STL, and sandbox execution are not implemented yet.",
+        app_name=settings.app_name,
+        version=settings.app_version,
+        mode="placeholder_scaffold",
+        available_endpoints=["/health", "/info", "/providers", "/preview", "/generate", "/status/{job_id}"],
+        supported_providers=orchestrator.get_supported_provider_names(),
+    )
 
 
 @api_router.get(
@@ -46,7 +70,7 @@ async def get_status(job_id: str) -> JobStatusResponse:
     """Return placeholder job status for a submitted generation request."""
     job_status = orchestrator.get_job_status(job_id)
     if job_status is None:
-        raise HTTPException(status_code=404, detail=f"Unknown job_id: {job_id}")
+        raise HTTPException(status_code=404, detail=f"No placeholder job found for job_id '{job_id}'.")
     return job_status
 
 
